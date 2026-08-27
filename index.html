@@ -157,15 +157,24 @@ button{font-family:inherit}
 
 /* لوحة مؤشرات الأداء */
 .kpi-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
-  padding:20px 22px;margin-bottom:14px}
-.kp-row{display:flex;align-items:center;gap:14px;margin-bottom:12px}
-.kp-lbl{width:44px;flex-shrink:0;font-size:12.5px;font-weight:600;color:var(--steel)}
-.kp-bar{position:relative;flex:1;height:14px;background:var(--line2);border-radius:20px;overflow:hidden}
-.kp-bar.outline{background:#fff;border:1.5px dashed var(--line)}
-.kp-fill{position:absolute;inset-inline-end:0;top:0;bottom:0;background:var(--gold);border-radius:20px}
-.kp-fill.outline{background:transparent;border-inline-start:2px dashed var(--gold-deep)}
-.kp-val{width:38px;flex-shrink:0;font-size:13px;font-weight:600;text-align:left}
-.kp-diff{font-size:13px;font-weight:700;margin:2px 0 0}
+  padding:24px 26px;margin-bottom:14px}
+.kpi-hero{display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+.kpi-ring{position:relative;width:132px;height:132px;border-radius:50%;flex-shrink:0}
+.kpi-ring::before{content:'';position:absolute;inset:13px;background:var(--card);border-radius:50%;
+  box-shadow:inset 0 0 0 1px var(--line2)}
+.kpi-ring-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.kpi-ring-txt b{font-size:28px;font-weight:700;line-height:1;color:var(--ink)}
+.kpi-ring-txt span{font-size:10.5px;color:var(--steel);margin-top:4px;font-weight:600}
+.kpi-side{flex:1;min-width:180px}
+.kpi-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;
+  font-size:12.5px;font-weight:700;margin-bottom:12px}
+.kpi-badge.ontrack{background:#E7F3EA;color:#1E7A4C}
+.kpi-badge.behind{background:#FBEAE7;color:#B23B2E}
+.kpi-plan-row{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--steel);margin-bottom:6px}
+.kpi-plan-row .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.kpi-plan-row b{color:var(--ink);font-weight:700}
+.kpi-asof{font-size:11.5px;color:var(--steel);margin-top:8px}
+
 .kv-table{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .kv-row{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;
   border-bottom:1px solid var(--line2);font-size:13px}
@@ -175,7 +184,11 @@ button{font-family:inherit}
 
 .kv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .kv-card{background:var(--card);border:1px solid var(--line);border-inline-start:3px solid var(--gold);
-  border-radius:var(--r);padding:14px 16px}
+  border-radius:var(--r);padding:14px 16px;display:flex;align-items:flex-start;gap:11px}
+.kv-card .kv-ic{width:30px;height:30px;border-radius:9px;background:var(--gold-soft);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center}
+.kv-card .kv-ic svg{width:16px;height:16px;stroke:var(--gold-deep);fill:none;stroke-width:1.9}
+.kv-card .kv-body{min-width:0}
 .kv-card .kv-lbl{font-size:11px;color:var(--steel);font-weight:500;margin-bottom:6px}
 .kv-card .kv-val{font-size:15.5px;font-weight:600;letter-spacing:-.2px}
 .kv-card.wide{grid-column:span 2}
@@ -817,32 +830,44 @@ function renderDash(){
     return;
   }
   const diff = k.actualPct - k.plannedPct;
-  const diffTxt = diff>=0 ? `متقدم عن الخطة بـ ${diff}%` : `متأخر عن الخطة بـ ${Math.abs(diff)}%`;
-  const diffColor = diff>=0 ? '#1E7A4C' : '#B23B2E';
+  const ontrack = diff>=0;
+  const diffTxt = ontrack ? `متقدم عن الخطة بـ ${diff}%` : `متأخر عن الخطة بـ ${Math.abs(diff)}%`;
+
+  const ICONS = {
+    code: '<path d="M8 6L3 12l5 6M16 6l5 6-5 6"/>',
+    money:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1 3 2.2c0 3-6 1.3-6 4.3 0 1.3 1.3 2.3 3 2.3s3-1 3-2.3"/>',
+    cal:  '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>'
+  };
+  const kv = (icon, lbl, val, wide=false) => `
+    <div class="kv-card${wide?' wide':''}">
+      <div class="kv-ic"><svg viewBox="0 0 24 24">${ICONS[icon]}</svg></div>
+      <div class="kv-body"><div class="kv-lbl">${lbl}</div><div class="kv-val mono">${val}</div></div>
+    </div>`;
+
   document.getElementById('main').innerHTML = `${crumb}
-    <div class="head"><h2>مؤشرات الأداء للمشروع</h2><span class="cnt">آخر تحديث: ${k.asOf||''}</span></div>
+    <div class="head"><h2>مؤشرات الأداء للمشروع</h2></div>
 
     <div class="kpi-panel">
-      <div class="kp-row">
-        <span class="kp-lbl">فعلي</span>
-        <div class="kp-bar"><div class="kp-fill" style="width:${k.actualPct}%"></div></div>
-        <span class="kp-val mono">${k.actualPct}%</span>
+      <div class="kpi-hero">
+        <div class="kpi-ring" style="background:conic-gradient(var(--gold) 0% ${k.actualPct}%, var(--line2) ${k.actualPct}% 100%)">
+          <div class="kpi-ring-txt"><b>${k.actualPct}%</b><span>الإنجاز الفعلي</span></div>
+        </div>
+        <div class="kpi-side">
+          <div class="kpi-badge ${ontrack?'ontrack':'behind'}">${diffTxt}</div>
+          <div class="kpi-plan-row"><span class="dot" style="background:var(--gold-deep)"></span>الخطة المستهدفة حتى تاريخه: <b>${k.plannedPct}%</b></div>
+          <div class="kpi-asof">آخر تحديث: ${k.asOf||'—'}</div>
+        </div>
       </div>
-      <div class="kp-row">
-        <span class="kp-lbl">مخطط</span>
-        <div class="kp-bar outline"><div class="kp-fill outline" style="width:${k.plannedPct}%"></div></div>
-        <span class="kp-val mono">${k.plannedPct}%</span>
-      </div>
-      <p class="kp-diff" style="color:${diffColor}">${diffTxt}</p>
     </div>
 
     <div class="kv-grid">
-      <div class="kv-card"><div class="kv-lbl">كود المشروع</div><div class="kv-val mono">${k.code}</div></div>
-      <div class="kv-card wide"><div class="kv-lbl">القيمة التعاقدية</div><div class="kv-val mono">${k.value}</div></div>
-      <div class="kv-card"><div class="kv-lbl">تاريخ البدء</div><div class="kv-val mono">${k.start}</div></div>
-      <div class="kv-card"><div class="kv-lbl">تاريخ الانتهاء</div><div class="kv-val mono">${k.end}</div></div>
-      <div class="kv-card"><div class="kv-lbl">المدة المتبقية</div><div class="kv-val mono">${k.remaining}</div></div>
-      <div class="kv-card"><div class="kv-lbl">مستخلصات منصرفة</div><div class="kv-val mono">${k.disbursed}</div></div>
+      ${kv('code','كود المشروع',k.code)}
+      ${kv('money','القيمة التعاقدية',k.value,true)}
+      ${kv('cal','تاريخ البدء',k.start)}
+      ${kv('cal','تاريخ الانتهاء',k.end)}
+      ${kv('clock','المدة المتبقية',k.remaining)}
+      ${kv('money','مستخلصات منصرفة',k.disbursed)}
     </div>`;
 }
 
